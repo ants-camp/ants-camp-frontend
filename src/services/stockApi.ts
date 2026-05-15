@@ -44,7 +44,10 @@ export async function unsubscribeStock(stockCode: string): Promise<void> {
  * KIS WebSocket 연결 상태 확인
  */
 export async function getKisStatus(): Promise<string> {
-  const res = await fetch(`${BASE_URL}/trades/realtime/status`)
+  const token = localStorage.getItem('accessToken')
+  const res = await fetch(`${BASE_URL}/trades/realtime/status`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
   if (!res.ok) return 'KIS WebSocket 미연결'
   return res.text()
 }
@@ -267,6 +270,37 @@ async function fetchDailyCandles(stockCode: string, timeframe: '1d' | '1w' | '1M
       volume: Number(o.acml_vol),
     }))
     .reverse()  // KIS는 최신순 → 오름차순으로 뒤집기
+}
+
+// ── 여러 종목 현재가 일괄 조회 ────────────────────────────────────────────
+
+/**
+ * POST /api/trades/stock-price-list
+ * 요청: { "stock-list": ["005930", "000660", ...] }
+ * 응답: { stockPrice: { "005930": "75000", ... } }
+ */
+export async function fetchStockPriceList(
+  codes: string[],
+): Promise<Record<string, number>> {
+  const token = localStorage.getItem('accessToken') ?? ''
+  try {
+    const res = await fetch(`${BASE_URL}/trades/stock-price-list`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ 'stock-list': codes }),
+    })
+    if (!res.ok) return {}
+    const json = await res.json()
+    const raw: Record<string, string> = json?.data?.stockPrice ?? json?.stockPrice ?? {}
+    return Object.fromEntries(
+      Object.entries(raw).map(([code, price]) => [code, Number(price)]),
+    )
+  } catch {
+    return {}
+  }
 }
 
 // ── 내부: 날짜 → 'YYYYMMDD' 문자열 변환 (KST 기준) ─────────────────────
