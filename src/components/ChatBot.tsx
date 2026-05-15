@@ -777,9 +777,9 @@ function SourceModal({
                   {DOC_TYPE_LABEL[doc.docType]}
                 </span>
               </div>
-              <p className="text-[13px] text-gray-200 leading-relaxed whitespace-pre-wrap break-keep">
-                {doc.content}
-              </p>
+              <div className="guide-md text-[13px] leading-relaxed break-keep text-gray-200">
+                <ReactMarkdown remarkPlugins={[remarkBreaks]}>{doc.content}</ReactMarkdown>
+              </div>
             </div>
           ) : null}
         </div>
