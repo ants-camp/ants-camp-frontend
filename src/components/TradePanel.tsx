@@ -100,6 +100,7 @@ export function TradePanel({ stockCode, stockName, currentPrice }: Props) {
         stockCode,
         stockAmount: qty,
         orderType,
+        accountId: accountId.trim(),
         ...(orderType === 'LIMIT' && { limitPrice: parseFloat(limitPrice) }),
       }
       const fn  = side === 'BUY' ? placeOrderBuy : placeOrderSell
