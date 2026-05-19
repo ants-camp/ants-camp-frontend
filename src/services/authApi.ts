@@ -375,7 +375,7 @@ export async function getAccount(
   userId: string,
   accessToken?: string,
 ): Promise<AccountResult> {
-  const res = await fetch(`/api/accounts/${accountId}`, {
+  const res = await fetchWithAuth(`/api/accounts/${accountId}`, {
     headers: { ...authHeaders(accessToken), 'X-User-Id': userId },
   })
   return unwrap<AccountResult>(res)
@@ -387,7 +387,7 @@ export async function getAsset(
   userId: string,
   token?: string,
 ): Promise<AssetResult> {
-  const res = await fetch(`/api/assets?accountId=${accountId}`, {
+  const res = await fetchWithAuth(`/api/assets?accountId=${accountId}`, {
     headers: { ...authHeaders(token), 'X-User-Id': userId },
   })
   return unwrap<AssetResult>(res)
@@ -399,7 +399,7 @@ export async function getHoldings(
   userId: string,
   accessToken?: string,
 ): Promise<HoldingItem[]> {
-  const res = await fetch(`/api/holdings?accountId=${accountId}`, {
+  const res = await fetchWithAuth(`/api/holdings?accountId=${accountId}`, {
     headers: { ...authHeaders(accessToken), 'X-User-Id': userId },
   })
   return unwrap<HoldingItem[]>(res)
@@ -424,7 +424,7 @@ export async function getAccountDetail(
 
 /** GET /api/accounts — 내 계좌 목록 (게이트웨이가 X-User-Id 자동 주입) */
 export async function getMyAccounts(token?: string): Promise<AccountResult[]> {
-  const res = await fetch('/api/accounts', { headers: authHeaders(token) })
+  const res = await fetchWithAuth('/api/accounts', { headers: authHeaders(token) })
   if (!res.ok) return []
   const json = await res.json().catch(() => null)
   if (!json) return []
