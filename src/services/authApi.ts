@@ -330,7 +330,7 @@ export async function getMyRanking(
   competitionId: string,
 ): Promise<CompetitionRanking | null> {
   try {
-    const res = await fetch(`/api/rankings/competitions/${competitionId}/me`, {
+    const res = await fetchWithAuth(`/api/rankings/competitions/${competitionId}/me`, {
       headers: authHeaders(localStorage.getItem('accessToken')),
     })
     if (!res.ok) return null
@@ -357,7 +357,7 @@ export async function getCompetitionRankings(
   page = 0,
   size = 50,
 ): Promise<CompetitionRanking[]> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `/api/rankings/competitions/${competitionId}?page=${page}&size=${size}`,
     { headers: authHeaders(localStorage.getItem('accessToken')) },
   )
@@ -452,7 +452,7 @@ export interface MarketStatus {
 
 export async function getMarketStatus(): Promise<MarketStatus | null> {
   try {
-    const res = await fetch('/api/market/status', {
+    const res = await fetchWithAuth('/api/market/status', {
       headers: authHeaders(localStorage.getItem('accessToken')),
     })
     if (!res.ok) return null
@@ -482,7 +482,7 @@ export interface CreateManagerRequest {
 
 /** GET /api/admin/users */
 export async function getAllUsers(): Promise<AdminUser[]> {
-  const res = await fetch('/api/admin/users', {
+  const res = await fetchWithAuth('/api/admin/users', {
     headers: authHeaders(localStorage.getItem('accessToken')),
   })
   return unwrap<AdminUser[]>(res)
@@ -490,7 +490,7 @@ export async function getAllUsers(): Promise<AdminUser[]> {
 
 /** POST /api/admin/users/manager */
 export async function createManager(req: CreateManagerRequest): Promise<AdminUser> {
-  const res = await fetch('/api/admin/users/manager', {
+  const res = await fetchWithAuth('/api/admin/users/manager', {
     method:  'POST',
     headers: authHeaders(localStorage.getItem('accessToken')),
     body:    JSON.stringify(req),
