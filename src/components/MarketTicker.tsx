@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, cloneElement } from 'react'
 import { Client } from '@stomp/stompjs'
 import { fetchMarketData, MOCK_MARKET, type MarketItem } from '@/services/marketApi'
+import { fetchStockPriceList } from '@/services/stockApi'
 import { useTickerStore } from '@/store/tickerStore'
 import { TICKER_STOCKS } from '@/config/stocks'
 import { Sparkline } from '@/components/ui/Sparkline'
@@ -76,6 +77,7 @@ function StockItem({ name, data }: { name: string; data: StockPriceData | null }
 export function MarketTicker() {
   const { prices: stockPrices, setPrice, setIndexData: storeSetIndex } = useTickerStore()
   const [indexData, setIndexData] = useState<MarketItem[]>(MOCK_MARKET)
+  const [restPrices, setRestPrices] = useState<Record<string, number>>({})
   const [paused, setPaused]           = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [secSince, setSecSince]       = useState(0)
@@ -122,6 +124,12 @@ export function MarketTicker() {
     return () => clearInterval(id)
   }, [])
 
+  // 장 마감 등 STOMP 데이터 없을 때 REST 가격으로 폴백
+  useEffect(() => {
+    const codes = TICKER_STOCKS.map((s) => s.code)
+    fetchStockPriceList(codes).then(setRestPrices).catch(() => {})
+  }, [])
+
   // 갱신까지 남은 초 카운트다운
   useEffect(() => {
     const id = setInterval(() => {
@@ -136,9 +144,14 @@ export function MarketTicker() {
     .map((sym) => indexData.find((d) => d.symbol === sym))
     .filter((d): d is MarketItem => !!d)
 
-  const stockItems = TICKER_STOCKS.map(({ code, name }) => (
-    <StockItem key={code} name={name} data={stockPrices[code] ?? null} />
-  ))
+  const stockItems = TICKER_STOCKS.map(({ code, name }) => {
+    const liveData = stockPrices[code]
+    // STOMP 실시간 데이터 없으면 REST 가격으로 폴백 (장 마감 등)
+    const fallbackData = !liveData && restPrices[code]
+      ? { currentPrice: restPrices[code], changeRate: 0, changePrice: 0, stockCode: code } as any
+      : null
+    return <StockItem key={code} name={name} data={liveData ?? fallbackData} />
+  })
 
   return (
     <div className="bg-gray-950 select-none">
